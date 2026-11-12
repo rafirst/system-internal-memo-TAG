@@ -82,6 +82,15 @@
         ['status' => \App\Enums\MemoStatus::Denied, 'icon' => 'close', 'color' => '#10a879', 'soft' => '#dcf7ed'],
         ['status' => \App\Enums\MemoStatus::Disbursed, 'icon' => 'clock', 'color' => '#d97706', 'soft' => '#fff0d8'],
     ];
+    // Warna dan ikon bulatan per jenis kejadian pada kartu aktivitas.
+    $activityStyles = [
+        'submitted' => ['bg-blue-500', '<path stroke-linecap="round" stroke-linejoin="round" d="M4 12l16-8-6 16-3-5-7-3Z"/>'],
+        'approved' => ['bg-emerald-500', '<path stroke-linecap="round" stroke-linejoin="round" d="m5 12 4 4L19 6"/>'],
+        'denied' => ['bg-rose-500', '<path stroke-linecap="round" d="m8 8 8 8m0-8-8 8"/>'],
+        'disbursed' => ['bg-amber-500', '<path stroke-linecap="round" stroke-linejoin="round" d="M4 8h16v9H4zM4 8l8-4 8 4M9 12.5h1.5"/>'],
+        'completed' => ['bg-sky-500', '<path stroke-linecap="round" stroke-linejoin="round" d="M7 17V7l5 3 5-3v10"/>'],
+        'drafted' => ['bg-slate-400', '<path stroke-linecap="round" stroke-linejoin="round" d="M7 3h7l5 5v13H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 3v5h5"/>'],
+    ];
 @endphp
 
 <div class="space-y-4">
@@ -95,34 +104,34 @@
         </div>
     </section>
 
-    <div class="dashboard-grid">
-        <div class="min-w-0 space-y-4">
-            <section class="grid grid-cols-2 gap-3 sm:grid-cols-4" aria-label="Ringkasan memo">
-                @foreach($statCards as $card)
-                    @php($status = $card['status'])
-                    <a href="{{ route('memos.index', ['status' => $status->value]) }}"
-                       class="stat-card relative isolate overflow-hidden rounded-xl border border-slate-100 bg-white p-4 shadow-sm"
-                       style="--accent-soft: {{ $card['soft'] }}">
-                        <span class="relative z-[1] mb-3 flex h-10 w-10 items-center justify-center rounded-full" style="background: {{ $card['soft'] }}; color: {{ $card['color'] }}">
-                            @if($card['icon'] === 'document')
-                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7 3h7l5 5v13H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 3v5h5M9 13h6M9 17h6"/></svg>
-                            @elseif($card['icon'] === 'shield')
-                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m12 3 8 3v5c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6l8-3Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4"/></svg>
-                            @elseif($card['icon'] === 'close')
-                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="m9 9 6 6m0-6-6 6"/></svg>
-                            @else
-                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2"/></svg>
-                            @endif
-                        </span>
-                        <span class="relative z-[1] block text-2xl font-bold leading-none text-slate-800">{{ $counts[$status->value] ?? 0 }}</span>
-                        <span class="relative z-[1] mt-2 flex items-center justify-between gap-2 text-xs text-slate-500">
-                            {{ $status->label() }}
-                            <svg class="h-4 w-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6"/></svg>
-                        </span>
-                    </a>
-                @endforeach
-            </section>
+    <section class="grid grid-cols-2 gap-3 sm:grid-cols-4" aria-label="Ringkasan memo">
+        @foreach($statCards as $card)
+            @php($status = $card['status'])
+            <a href="{{ route('memos.index', ['status' => $status->value]) }}"
+               class="stat-card relative isolate overflow-hidden rounded-xl border border-slate-100 bg-white p-4 shadow-sm"
+               style="--accent-soft: {{ $card['soft'] }}">
+                <span class="relative z-[1] mb-3 flex h-10 w-10 items-center justify-center rounded-full" style="background: {{ $card['soft'] }}; color: {{ $card['color'] }}">
+                    @if($card['icon'] === 'document')
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7 3h7l5 5v13H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 3v5h5M9 13h6M9 17h6"/></svg>
+                    @elseif($card['icon'] === 'shield')
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m12 3 8 3v5c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6l8-3Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4"/></svg>
+                    @elseif($card['icon'] === 'close')
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="m9 9 6 6m0-6-6 6"/></svg>
+                    @else
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2"/></svg>
+                    @endif
+                </span>
+                <span class="relative z-[1] block text-2xl font-bold leading-none text-slate-800">{{ $counts[$status->value] ?? 0 }}</span>
+                <span class="relative z-[1] mt-2 flex items-center justify-between gap-2 text-xs text-slate-500">
+                    {{ $status->label() }}
+                    <svg class="h-4 w-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6"/></svg>
+                </span>
+            </a>
+        @endforeach
+    </section>
 
+    <div class="dashboard-grid">
+        <div class="min-w-0">
             <section class="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm">
                 <div class="flex items-center justify-between gap-3 px-4 py-3.5 sm:px-5">
                     <h2 class="flex items-center gap-2 text-sm font-bold text-slate-800">
@@ -184,30 +193,38 @@
 
         <aside class="dashboard-side content-start gap-4">
             <section class="rounded-xl border border-slate-100 bg-white p-4 shadow-sm sm:p-5">
-                <div class="mb-4 flex items-center gap-2">
-                    <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-50 text-rose-600">
-                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2"/></svg>
-                    </span>
-                    <h2 class="text-sm font-bold text-slate-800">Aktivitas Terbaru</h2>
+                <div class="mb-4 flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-50 text-rose-600">
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2"/></svg>
+                        </span>
+                        <h2 class="text-sm font-bold text-slate-800">{{ $activityHeading }}</h2>
+                    </div>
+                    <a href="{{ route('memos.index') }}" class="whitespace-nowrap text-[11px] font-semibold text-rose-700 hover:text-rose-900">
+                        Semua <span aria-hidden="true">→</span>
+                    </a>
                 </div>
 
                 <div>
                     @forelse($recentActivity as $activity)
-                        <a href="{{ route('notifications.open', $activity->id) }}" class="activity-line flex gap-3 pb-4 last:pb-0">
-                            @php($activityColor = $activity->read_at ? 'bg-slate-400' : 'bg-emerald-500')
-                            <span class="relative z-[1] flex h-7 w-7 shrink-0 items-center justify-center rounded-full {{ $activityColor }} text-white">
-                                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m5 12 4 4L19 6"/></svg>
+                        @php($style = $activityStyles[$activity['type']] ?? $activityStyles['submitted'])
+                        <a href="{{ $activity['url'] }}" class="activity-line flex gap-3 pb-4 last:pb-0">
+                            <span class="relative z-[1] flex h-7 w-7 shrink-0 items-center justify-center rounded-full {{ $style[0] }} text-white">
+                                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">{!! $style[1] !!}</svg>
                             </span>
                             <span class="min-w-0 pt-0.5">
-                                <span class="block truncate text-xs font-semibold text-slate-700">{{ data_get($activity->data, 'title', 'Pembaruan memo') }}</span>
-                                <span class="mt-1 block text-[11px] leading-relaxed text-slate-500">{{ data_get($activity->data, 'message', 'Ada pembaruan pada aktivitas memo Anda.') }}</span>
-                                <span class="mt-1 block text-[10px] text-slate-400">{{ $activity->created_at->diffForHumans() }}</span>
+                                <span class="block truncate text-xs font-semibold text-slate-700">{{ $activity['title'] }}</span>
+                                <span class="mt-1 block text-[11px] leading-relaxed text-slate-500">{{ $activity['message'] }}</span>
+                                <span class="mt-1 block text-[10px] text-slate-400">
+                                    @if($activity['memo_number'])<span class="font-medium text-slate-500">{{ $activity['memo_number'] }}</span> <span class="text-slate-300">·</span>@endif
+                                    {{ $activity['at']?->diffForHumans() }}
+                                </span>
                             </span>
                         </a>
                     @empty
                         <div class="rounded-lg bg-slate-50 px-3 py-5 text-center">
                             <p class="text-xs font-semibold text-slate-600">Belum ada aktivitas</p>
-                            <p class="mt-1 text-[11px] text-slate-400">Notifikasi terbaru akan muncul di sini.</p>
+                            <p class="mt-1 text-[11px] text-slate-400">Kejadian memo terbaru akan muncul di sini.</p>
                         </div>
                     @endforelse
                 </div>

@@ -18,37 +18,93 @@
             display: grid;
             grid-template-columns: 220px minmax(0, 1fr);
             min-height: calc(100vh - 104px);
+            transition: grid-template-columns 180ms ease;
         }
+        .workspace.is-sidebar-collapsed { grid-template-columns: 68px minmax(0, 1fr); }
         .sidebar {
             display: flex;
             flex-direction: column;
             border-right: 1px solid #e4eaf2;
-            background: rgba(255, 255, 255, .88);
+            background: #fff;
+            font-family: Inter, "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+        }
+        .sidebar-brand {
+            display: flex;
+            min-height: 58px;
+            align-items: center;
+            gap: 9px;
+            border-bottom: 1px solid #edf0f5;
+            padding: 0 12px;
+            color: #172033;
+            text-align: left;
+        }
+        .sidebar-brand-mark {
+            display: flex;
+            width: 32px;
+            height: 32px;
+            flex: none;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9px;
+            background: #b5122b;
+            color: #fff;
+            font-family: inherit;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: -.04em;
+            box-shadow: 0 3px 8px rgba(164, 0, 30, .2);
+        }
+        .sidebar-brand-label { min-width: 0; flex: 1; }
+
+        .sidebar-brand-title { display: block; overflow: hidden; font-family: inherit; font-size: 15px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+        .sidebar nav { padding: 10px 0 14px; }
+        .sidebar-group { margin-bottom: 7px; }
+        .sidebar-group-heading {
+            display: block;
+            padding: 10px 12px 7px;
+            color: #7b8798;
+            font-size: 11px;
+            font-weight: 750;
+            letter-spacing: .1em;
         }
         .sidebar-link {
             display: flex;
             min-height: 42px;
             align-items: center;
-            gap: 11px;
-            border-radius: 0 7px 7px 0;
-            padding: 0 18px;
+            gap: 9px;
+            margin: 1px 8px;
+            border-radius: 7px;
+            padding: 0 10px;
             color: #334155;
-            font-size: 13px;
+            font-size: 15px;
             font-weight: 600;
             transition: background-color 150ms ease, color 150ms ease;
         }
         .sidebar-link:hover { background: #fff1f2; color: #a4001e; }
-        .sidebar-link.is-active { background: #b5122b; color: #fff; box-shadow: 0 5px 12px rgba(164, 0, 30, .16); }
-        .sidebar-link svg { width: 17px; height: 17px; flex: none; }
+        .sidebar-link.is-active { background: #b5122b; color: #fff; box-shadow: 0 4px 10px rgba(164, 0, 30, .14); }
+        .sidebar-link svg { width: 15px; height: 15px; flex: none; }
+        .sidebar-link-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .sidebar-unread-dot { width: 5px; height: 5px; flex: none; margin-left: auto; border-radius: 999px; background: #c8102e; }
+        .is-sidebar-collapsed .sidebar-brand { justify-content: center; padding: 0; }
+        .is-sidebar-collapsed .sidebar-brand-label,
+        .is-sidebar-collapsed .sidebar-group-heading,
+        .is-sidebar-collapsed .sidebar-link-label,
+        .is-sidebar-collapsed .sidebar-unread-dot { display: none; }
+        .is-sidebar-collapsed .sidebar-link { justify-content: center; margin-right: 8px; margin-left: 8px; padding: 0; }
         .app-main { min-width: 0; padding: 16px 20px 24px; }
         .content-shell { width: min(100%, 1440px); margin: 0 auto; }
         .brand-logo { display: block; width: 94px; height: 36px; object-fit: contain; }
         @media (max-width: 760px) {
             .workspace { grid-template-columns: 1fr; min-height: calc(100vh - 104px); }
+            .workspace.is-sidebar-collapsed { grid-template-columns: 1fr; }
             .sidebar { display: block; overflow-x: auto; border-right: 0; border-bottom: 1px solid #e4eaf2; }
             .sidebar nav { display: flex; min-width: max-content; padding: 8px 10px; }
+            .sidebar-group { display: flex; margin: 0; }
+            .sidebar-group-heading { display: none; }
             .sidebar-link { border-radius: 8px; padding: 0 12px; }
-            .sidebar-brand { display: none; }
+            .is-sidebar-collapsed .sidebar-link { padding: 0 12px; }
+            .is-sidebar-collapsed .sidebar-link-label { display: inline; }
+            .is-sidebar-collapsed .sidebar-brand-label { display: block; }
             .app-main { padding: 14px 12px 22px; }
         }
         @media (max-width: 520px) {
@@ -72,8 +128,6 @@
             <a href="{{ route('dashboard') }}" aria-label="Dashboard Internal Memo">
                 <img class="brand-logo" src="{{ asset('assets/images/Logo-TAG-white.png') }}" alt="Tunas Auto Graha">
             </a>
-            <span class="h-7 w-px bg-white/60"></span>
-            <span class="header-title truncate text-base font-bold tracking-wide">Internal Memo</span>
         </div>
 
         <div class="flex items-center gap-3 sm:gap-5">
@@ -127,39 +181,58 @@
         </div>
     </header>
 
-    <div class="workspace flex-1">
+    <div class="workspace flex-1"
+         x-data="{ sidebarCollapsed: localStorage.getItem('internal-memo-sidebar-collapsed') === 'true' }"
+         :class="{ 'is-sidebar-collapsed': sidebarCollapsed }">
         <aside class="sidebar">
-            <nav class="space-y-1 py-4">
-                <a href="{{ route('dashboard') }}" class="sidebar-link {{ request()->routeIs('dashboard') ? 'is-active' : '' }}">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V10Z"/></svg>
-                    Dashboard
-                </a>
-                <a href="{{ route('memos.index') }}" class="sidebar-link {{ request()->routeIs('memos.index', 'memos.show') ? 'is-active' : '' }}">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7 3h7l5 5v12a1 1 0 0 1-1 1H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 3v5h5M9 13h6M9 17h6"/></svg>
-                    Semua Memo
-                </a>
-                @can('create', App\Models\Memo::class)
-                    <a href="{{ route('memos.create') }}" class="sidebar-link {{ request()->routeIs('memos.create') ? 'is-active' : '' }}">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m7-7H5"/><circle cx="12" cy="12" r="9"/></svg>
-                        Pengajuan
+            <button type="button"
+                    class="sidebar-brand w-full"
+                    :aria-label="sidebarCollapsed ? 'Perluas sidebar' : 'Ciutkan sidebar'"
+                    title="TAG Internal Memo"
+                    @click="sidebarCollapsed = !sidebarCollapsed; localStorage.setItem('internal-memo-sidebar-collapsed', sidebarCollapsed)">
+                <span class="sidebar-brand-mark" aria-hidden="true">TAG</span>
+                <span class="sidebar-brand-label">
+                    <span class="sidebar-brand-title">TAG Internal Memo</span>
+                </span>
+            </button>
+            <nav aria-label="Navigasi utama">
+                <div class="sidebar-group">
+                    <span class="sidebar-group-heading">UTAMA</span>
+                    <a href="{{ route('dashboard') }}" class="sidebar-link {{ request()->routeIs('dashboard') ? 'is-active' : '' }}" title="Dashboard">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V10Z"/></svg>
+                        <span class="sidebar-link-label">Dashboard</span>
                     </a>
-                @endcan
+                    <a href="{{ route('memos.index') }}" class="sidebar-link {{ request()->routeIs('memos.index', 'memos.show') ? 'is-active' : '' }}" title="Semua Memo">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7 3h7l5 5v12a1 1 0 0 1-1 1H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 3v5h5M9 13h6M9 17h6"/></svg>
+                        <span class="sidebar-link-label">Semua Memo</span>
+                    </a>
+                </div>
+                <div class="sidebar-group">
+                    <span class="sidebar-group-heading">PERSETUJUAN</span>
+                    @can('create', App\Models\Memo::class)
+                        <a href="{{ route('memos.create') }}" class="sidebar-link {{ request()->routeIs('memos.create') ? 'is-active' : '' }}" title="Pengajuan">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v8m-4-4h8"/></svg>
+                            <span class="sidebar-link-label">Pengajuan</span>
+                        </a>
+                    @endcan
+                    <a href="{{ route('notifications.index') }}" class="sidebar-link {{ request()->routeIs('notifications.*') ? 'is-active' : '' }}" title="Notifikasi">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+                        <span class="sidebar-link-label">Notifikasi</span>
+                        @if($unreadNotifications > 0)
+                            <span class="sidebar-unread-dot" aria-label="{{ $unreadNotifications }} notifikasi belum dibaca"></span>
+                        @endif
+                    </a>
+                </div>
                 @if($authUser->hasRole('administrator'))
-                    <a href="{{ route('admin.users.index') }}" class="sidebar-link {{ request()->routeIs('admin.users.*') ? 'is-active' : '' }}">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2m6-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm10 10v-2a4 4 0 0 0-3-3.87m-1-11.13a4 4 0 0 1 0 7.75"/></svg>
-                        Pengguna
-                    </a>
+                    <div class="sidebar-group">
+                        <span class="sidebar-group-heading">ADMINISTRASI</span>
+                        <a href="{{ route('admin.users.index') }}" class="sidebar-link {{ request()->routeIs('admin.users.*') ? 'is-active' : '' }}" title="Pengguna">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2m6-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm10 10v-2a4 4 0 0 0-3-3.87m-1-11.13a4 4 0 0 1 0 7.75"/></svg>
+                            <span class="sidebar-link-label">Pengguna</span>
+                        </a>
+                    </div>
                 @endif
-                <a href="{{ route('notifications.index') }}" class="sidebar-link {{ request()->routeIs('notifications.*') ? 'is-active' : '' }}">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
-                    Notifikasi
-                </a>
             </nav>
-
-            {{-- <div class="sidebar-brand brand-stripes mt-auto px-5 py-7 text-center text-white">
-                <img class="mx-auto mb-3 h-14 w-36 object-contain" src="{{ asset('assets/images/Logo-TAG-white.png') }}" alt="Tunas Auto Graha">
-                <p class="text-[10px] font-bold tracking-[.12em]">INTERNAL MEMO SYSTEM</p>
-            </div> --}}
         </aside>
 
         <main class="app-main">

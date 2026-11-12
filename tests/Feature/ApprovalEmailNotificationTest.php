@@ -80,6 +80,40 @@ class ApprovalEmailNotificationTest extends TestCase
         $this->assertNotificationSentTo($finance, 'Bukti realisasi diunggah');
     }
 
+    public function test_administrator_receives_email_only_when_assigned_to_approve_a_memo(): void
+    {
+        $this->seed();
+        Notification::fake();
+
+        $staff = User::where('username', 'staff.marcomm')->firstOrFail();
+        $administrator = User::where('username', 'admin')->firstOrFail();
+        $adminApprovalMemo = $this->createMemo($staff, $administrator, [$administrator->id]);
+
+        app(ApprovalService::class)->submit($adminApprovalMemo, $staff);
+
+        Notification::assertSentTo(
+            $administrator,
+            MemoNotification::class,
+            fn (MemoNotification $notification): bool => $notification->title === 'Memo menunggu persetujuan Anda'
+                && $notification->via($administrator) === ['database', 'mail'],
+        );
+
+        Notification::fake();
+
+        $supervisor = User::where('username', 'yogi')->firstOrFail();
+        $adminSubmittedMemo = $this->createMemo($administrator, $supervisor, [$supervisor->id]);
+        $service = app(ApprovalService::class);
+        $service->submit($adminSubmittedMemo, $administrator);
+        $service->approve($adminSubmittedMemo->fresh(), $supervisor);
+
+        Notification::assertSentTo(
+            $administrator,
+            MemoNotification::class,
+            fn (MemoNotification $notification): bool => $notification->title === 'Memo disetujui seluruhnya'
+                && $notification->via($administrator) === ['database'],
+        );
+    }
+
     public function test_denial_reason_is_kept_in_app_but_never_in_the_email(): void
     {
         $this->seed();

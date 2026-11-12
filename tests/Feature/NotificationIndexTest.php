@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Branch;
+use App\Models\Division;
+use App\Models\Memo;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -11,6 +14,37 @@ use Tests\TestCase;
 class NotificationIndexTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_administrator_sees_system_activity_from_other_users_on_notification_page(): void
+    {
+        $this->seed();
+
+        $staff = User::where('username', 'staff.marcomm')->firstOrFail();
+        $memo = Memo::create([
+            'submitter_id' => $staff->id,
+            'division_id' => $staff->division_id ?? Division::where('code', 'MD')->value('id'),
+            'branch_id' => $staff->branch_id ?? Branch::where('name', 'Palembang')->value('id'),
+            'subject' => 'Draft lintas pengguna',
+            'opening_paragraph' => 'Memo pengujian notifikasi administrator.',
+            'memo_date' => now()->toDateString(),
+            'status' => 'draft',
+            'total_amount' => 100000,
+            'approver_ids' => [],
+        ]);
+        $memo->items()->create([
+            'name' => 'Perlengkapan',
+            'qty' => 1,
+            'unit_price' => 100000,
+            'subtotal' => 100000,
+        ]);
+
+        $this->actingAs(User::where('username', 'admin')->firstOrFail())
+            ->get(route('notifications.index'))
+            ->assertOk()
+            ->assertSee('Memo dibuat')
+            ->assertSee('Staff Marcomm membuat draft memo "Draft lintas pengguna".')
+            ->assertDontSee('Tandai semua dibaca');
+    }
 
     public function test_notification_page_filters_categories_and_shows_summary_counts(): void
     {

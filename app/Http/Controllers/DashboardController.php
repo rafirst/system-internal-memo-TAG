@@ -4,11 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Enums\MemoStatus;
 use App\Models\Memo;
+use App\Services\MemoActivityFeed;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function __invoke(Request $request)
+    public function __invoke(Request $request, MemoActivityFeed $feed)
     {
         $user = $request->user();
         $with = ['submitter', 'onBehalfOf', 'division'];
@@ -45,10 +46,9 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        $recentActivity = $user->notifications()
-            ->latest()
-            ->limit(4)
-            ->get();
+        // Umpan kejadian memo, cakupan dan jenisnya mengikuti role pengguna.
+        $recentActivity = $feed->forUser($user, 4);
+        $activityHeading = $feed->headingFor($user);
 
         return view('dashboard', compact(
             'awaiting',
@@ -57,6 +57,7 @@ class DashboardController extends Controller
             'counts',
             'recentMemos',
             'recentActivity',
+            'activityHeading',
         ));
     }
 }

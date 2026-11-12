@@ -126,7 +126,7 @@
                     </button>
                     <a href="{{ route('admin.users.create') }}" class="users-filter-action inline-flex min-h-[34px] items-center justify-center gap-1.5 rounded-md bg-rose-700 px-3 text-[10px] font-semibold text-white transition hover:bg-rose-800">
                         <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" d="M12 5v14m7-7H5"/></svg>
-                        Tambah User
+                         User
                     </a>
                 </form>
 
@@ -195,7 +195,55 @@
                         <p class="text-[9px] text-slate-500">
                             Menampilkan {{ $users->firstItem() ?? 0 }}–{{ $users->lastItem() ?? 0 }} dari {{ $users->total() }} pengguna
                         </p>
-                        <div class="text-xs">{{ $users->links() }}</div>
+                        @php($firstVisiblePage = min($users->currentPage(), max($users->lastPage() - 1, 1)))
+                        @php($visiblePages = range($firstVisiblePage, min($firstVisiblePage + 1, $users->lastPage())))
+                        <nav aria-label="Pagination pengguna" class="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
+                            @if($users->previousPageUrl())
+                                <a href="{{ $users->previousPageUrl() }}"
+                                   aria-label="Halaman sebelumnya"
+                                   class="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700">
+                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                        <path d="m15 18-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </a>
+                            @else
+                                <span aria-label="Halaman sebelumnya" aria-disabled="true" class="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-100 text-slate-300">
+                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                        <path d="m15 18-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                            @endif
+
+                            @foreach($visiblePages as $page)
+                                @if($page === $users->currentPage())
+                                    <span aria-current="page" aria-label="Halaman {{ $page }}" class="flex h-9 min-w-9 items-center justify-center rounded-lg bg-rose-700 px-2 text-xs font-semibold text-white">
+                                        {{ $page }}
+                                    </span>
+                                @else
+                                    <a href="{{ $users->url($page) }}"
+                                       aria-label="Halaman {{ $page }}"
+                                       class="flex h-9 min-w-9 items-center justify-center rounded-lg px-2 text-xs font-semibold text-slate-600 transition hover:bg-rose-50 hover:text-rose-700">
+                                        {{ $page }}
+                                    </a>
+                                @endif
+                            @endforeach
+
+                            @if($users->nextPageUrl())
+                                <a href="{{ $users->nextPageUrl() }}"
+                                   aria-label="Halaman berikutnya"
+                                   class="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700">
+                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                        <path d="m9 18 6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </a>
+                            @else
+                                <span aria-label="Halaman berikutnya" aria-disabled="true" class="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-100 text-slate-300">
+                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                        <path d="m9 18 6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                            @endif
+                        </nav>
                     </div>
                 </div>
             </section>

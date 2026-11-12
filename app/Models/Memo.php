@@ -46,6 +46,12 @@ class Memo extends Model
         return $this->belongsTo(Division::class);
     }
 
+    /** Admin Keuangan yang mencairkan dana. */
+    public function disbursedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'disbursed_by');
+    }
+
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);

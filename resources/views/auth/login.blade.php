@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#a9001e">
     <title>Masuk · Internal Memo</title>
+    <!-- Buatan gue nih Mohammad Rafi Abdillah. IG : @rafirst_ -->
+
     <style>
         :root {
             color-scheme: light;

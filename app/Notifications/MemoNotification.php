@@ -15,11 +15,15 @@ class MemoNotification extends Notification
         public string $message,
         public ?string $mailMessage = null,
         private bool $databaseOnly = false,
+        private bool $emailAdministrator = false,
     ) {}
 
     public function via(object $notifiable): array
     {
-        if ($this->databaseOnly) {
+        if (
+            $this->databaseOnly
+            || ($notifiable instanceof User && $notifiable->hasRole('administrator') && ! $this->emailAdministrator)
+        ) {
             return ['database'];
         }
 
@@ -75,5 +79,4 @@ class MemoNotification extends Notification
             'url' => route('memos.show', $this->memo),
         ];
     }
-
 }

@@ -363,7 +363,8 @@ class ApprovalService
             $recipients,
             $memo,
             'Memo menunggu persetujuan Anda',
-            "Memo {$memo->memo_number} \"{$memo->subject}\" dari {$memo->submitter->name} menunggu approval Anda."
+            "Memo {$memo->memo_number} \"{$memo->subject}\" dari {$memo->submitter->name} menunggu approval Anda.",
+            emailAdministrator: true,
         );
     }
 
@@ -416,10 +417,17 @@ class ApprovalService
         string $title,
         string $message,
         ?string $mailMessage = null,
+        bool $emailAdministrator = false,
     ): void {
         foreach ($users as $user) {
             try {
-                Notification::send($user, new MemoNotification($memo, $title, $message, $mailMessage));
+                Notification::send($user, new MemoNotification(
+                    $memo,
+                    $title,
+                    $message,
+                    $mailMessage,
+                    emailAdministrator: $emailAdministrator,
+                ));
             } catch (\Throwable $e) {
                 report($e);
             }

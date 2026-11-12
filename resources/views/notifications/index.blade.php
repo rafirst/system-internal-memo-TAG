@@ -168,7 +168,7 @@
                             </a>
                         @endforeach
                     </nav>
-                    @if($unreadNotifications > 0)
+                    @if(!$isActivityFeed && $unreadNotifications > 0)
                         <form method="POST" action="{{ route('notifications.readAll') }}" class="hidden shrink-0 sm:block">
                             @csrf
                             <button class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-semibold text-slate-600 shadow-sm transition hover:border-rose-200 hover:text-rose-700">
@@ -182,6 +182,7 @@
                     @forelse($notifications as $notification)
                         @php
                             $title = data_get($notification->data, 'title', 'Notifikasi');
+                            $isUnread = !$isActivityFeed && !$notification->read_at;
                             $category = str_contains(mb_strtolower($title), 'ditolak')
                                 ? 'denied'
                                 : (str_contains(mb_strtolower($title), 'persetujuan') || str_contains(mb_strtolower($title), 'disetujui')
@@ -190,8 +191,8 @@
                                         ? 'updated'
                                         : 'all'));
                         @endphp
-                        <a href="{{ route('notifications.open', $notification->id) }}"
-                           class="notification-card {{ $notification->read_at ? '' : 'is-unread' }}">
+                        <a href="{{ $isActivityFeed ? data_get($notification->data, 'url', route('dashboard')) : route('notifications.open', $notification->id) }}"
+                           class="notification-card {{ $isUnread ? 'is-unread' : '' }}">
                             <span class="notification-icon {{ $categoryStyles[$category] }}">
                                 @if($category === 'denied')
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" d="m8 8 8 8m0-8-8 8"/><circle cx="12" cy="12" r="9"/></svg>
@@ -207,7 +208,7 @@
                             <span class="min-w-0">
                                 <span class="mb-0.5 flex items-center gap-2">
                                     <span class="truncate text-[11px] font-bold text-slate-800">{{ $title }}</span>
-                                    @if(!$notification->read_at)
+                                    @if($isUnread)
                                         <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-rose-600" aria-label="Belum dibaca"></span>
                                     @endif
                                 </span>

@@ -16,6 +16,10 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
 });
 
+Route::get('public/memos/{memo}/pdf', [MemoPdfController::class, 'showPublic'])
+    ->middleware('signed')
+    ->name('memos.public-pdf');
+
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/', DashboardController::class)->name('dashboard');
@@ -34,7 +38,7 @@ Route::middleware('auth')->group(function () {
     Route::post('notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.readAll');
     Route::get('notifications/{id}', [NotificationController::class, 'open'])->name('notifications.open');
 
-    Route::middleware(EnsureRole::class . ':administrator')->prefix('admin')->name('admin.')->group(function () {
+    Route::middleware(EnsureRole::class.':administrator')->prefix('admin')->name('admin.')->group(function () {
         Route::resource('users', UserController::class)->except(['show', 'destroy']);
         Route::post('users/{user}/test-email', [UserController::class, 'testEmail'])->name('users.test-email');
     });

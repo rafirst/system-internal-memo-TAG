@@ -130,6 +130,7 @@ class UserManagementTest extends TestCase
             ->assertSee('Pagination User 10')
             ->assertDontSee('Pagination User 11')
             ->assertSee('aria-label="Halaman berikutnya"', false)
+            ->assertSee('bg-rose-700', false)
             ->assertSee('q=Pagination%20User', false);
 
         $this->get(route('admin.users.index', ['q' => 'Pagination User', 'page' => 2]))
@@ -137,6 +138,7 @@ class UserManagementTest extends TestCase
             ->assertSee('Menampilkan 11–11 dari 11 pengguna')
             ->assertSee('Pagination User 11')
             ->assertSee('aria-label="Halaman sebelumnya"', false)
+            ->assertSee('aria-current="page" aria-label="Halaman 2"', false)
             ->assertSee('q=Pagination%20User', false);
     }
 }

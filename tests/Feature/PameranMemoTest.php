@@ -7,6 +7,7 @@ use App\Models\Division;
 use App\Models\Memo;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 class PameranMemoTest extends TestCase
@@ -63,6 +64,28 @@ class PameranMemoTest extends TestCase
         $this->get(route('memos.pdf', $memo))
             ->assertOk()
             ->assertHeader('content-type', 'application/pdf');
+
+        $publicPdfUrl = URL::signedRoute('memos.public-pdf', ['memo' => $memo]);
+        auth()->logout();
+
+        $publicPdfResponse = $this->get($publicPdfUrl)
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+        preg_match_all('/\/Subtype\s*\/Image/', $publicPdfResponse->getContent(), $pdfImages);
+        $this->assertGreaterThanOrEqual(2, count($pdfImages[0]));
+        $this->assertMatchesRegularExpression('/\/Width\s+512\b/', $publicPdfResponse->getContent());
+
+        $memo->update(['status' => 'approved']);
+        $this->get($publicPdfUrl)
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+
+        $this->get(route('memos.public-pdf', $memo))->assertForbidden();
+
+        $memo->update(['status' => 'draft']);
+        $draftPdfUrl = URL::signedRoute('memos.public-pdf', ['memo' => $memo]);
+
+        $this->get($draftPdfUrl)->assertNotFound();
     }
 
     public function test_pameran_memo_rejects_a_budget_range_where_the_maximum_is_less_than_the_minimum(): void

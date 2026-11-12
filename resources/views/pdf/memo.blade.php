@@ -82,6 +82,11 @@
     .stamp.submitted { background: #f8fafc; }
     .stamp.waiting { background: #f8fafc; }
     .wm { position: fixed; top: 38%; left: 8%; font-size: 90px; color: #e5e5e5; transform: rotate(-30deg); z-index: -1; }
+    .verification { width: 100%; border-collapse: collapse; border-top: 1px solid #ccc; margin-top: 18px; color: #555; }
+    .verification td { vertical-align: middle; padding-top: 8px; }
+    .verification .qr { width: 140px; }
+    .verification .qr img { width: 128px; height: 128px; }
+    .verification .copy { vertical-align: top; }
 </style>
 </head>
 <body>
@@ -92,7 +97,6 @@
 <table class="header">
     <tr>
         <td>@if(file_exists($logo))<img src="{{ $logo }}" style="height:44px">@else<strong>PT TUNAS AUTO GRAHA</strong>@endif</td>
-        <td class="r"><strong>Divisi {{ $memo->division->name }}</strong></td>
     </tr>
 </table>
 
@@ -151,7 +155,7 @@
     @endif
 @else
     <table class="items">
-        <tr><th style="width:28px">No</th><th>Item</th><th style="width:50px">Jumlah</th><th style="width:90px">Harga</th><th style="width:95px">Total</th></tr>
+        <tr><th style="width:28px">No</th><th>Item</th><th style="width:50px">Jumlah</th><th style="width:90px">Harga</th><th style="width:110px">Total</th></tr>
         @foreach($memo->items as $i)
             <tr>
                 <td class="c">{{ $loop->iteration }}</td>
@@ -161,7 +165,10 @@
                 <td class="r">{{ Format::rupiah($i->subtotal) }}</td>
             </tr>
         @endforeach
-        <tr><td colspan="4" class="r"><strong>Total</strong></td><td class="r"><strong>{{ Format::rupiah($memo->total_amount) }}</strong></td></tr>
+        <tr>
+            <td colspan="4" class="c"><strong>Total</strong></td>
+            <td class="r" style="white-space:nowrap"><strong>{{ Format::rupiah($memo->total_amount) }}</strong></td>
+        </tr>
         <tr><td colspan="5" class="c" style="background:#f5f5f5"><strong>Terbilang: {{ Terbilang::rupiah($memo->total_amount) }}</strong></td></tr>
     </table>
 @endif
@@ -183,7 +190,7 @@
     </tr>
     <tr><td class="gap"></td>@foreach($middle as $a)<td></td>@endforeach @if($last)<td></td>@endif</tr>
     <tr>
-        <td>
+        <td class="copy">
             @if($supervisorApproval)
                 @php $requesterStamp = $cell($supervisorApproval); @endphp
             @endif
@@ -215,5 +222,17 @@
         @endif
     </tr>
 </table>
+
+@if($qrCode)
+    <table class="verification">
+        <tr>
+            <td class="qr"><img src="{{ $qrCode }}" alt="QR code untuk membuka PDF internal memo"></td>
+            <td>
+                Dokumen internal memo digital ini dapat dibuat melalui sistem Internal Memo PT Tunas Auto Graha.<br>
+                Scan QR untuk melihat PDF dan status persetujuan terbaru.
+            </td>
+        </tr>
+    </table>
+@endif
 </body>
 </html>

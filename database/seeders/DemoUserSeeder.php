@@ -23,7 +23,7 @@ class DemoUserSeeder extends Seeder
             ['Yogi Pratama', 'yogi', 'yogi@tag.test', 'spv', $md, 'Digital Marketing'],
             ['Staff Marcomm', 'staff.marcomm', 'staff.marcomm@tag.test', 'staff', $md, 'Staff Marcomm'],
             ['Devi K', 'devi', 'devi@tag.test', 'admin_keuangan', null, 'Kepala Keuangan'],
-            ['Awanti', 'awanti', 'awanti@tag.test', 'admin_finance', null, 'ADH'],
+            ['Aswani', 'aswani', 'aswani@tag.test', 'admin_finance', null, 'ADH'],
             ['Richie Setiawan', 'richie', 'richie@tag.test', 'direksi', null, 'Direksi'],
         ];
 
