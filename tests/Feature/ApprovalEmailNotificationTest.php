@@ -28,7 +28,7 @@ class ApprovalEmailNotificationTest extends TestCase
         $staff = User::where('username', 'staff.marcomm')->firstOrFail();
         $supervisor = User::where('username', 'yogi')->firstOrFail();
         $finance = User::where('username', 'devi')->firstOrFail();
-        $adh = User::where('username', 'awanti')->firstOrFail();
+        $adh = User::where('username', 'aswani')->firstOrFail();
         $director = User::where('username', 'richie')->firstOrFail();
         $supervisorRole = Role::where('slug', 'spv')->firstOrFail();
         $extraSupervisor = User::factory()->create([
@@ -51,6 +51,27 @@ class ApprovalEmailNotificationTest extends TestCase
         $service->submit($memo, $staff);
 
         $this->assertNotificationSentTo($supervisor, 'Memo menunggu persetujuan Anda');
+        Notification::assertSentTo(
+            $supervisor,
+            MemoNotification::class,
+            function (MemoNotification $notification) use ($supervisor): bool {
+                if (
+                    $notification->title !== 'Memo menunggu persetujuan Anda'
+                    || $notification->via($supervisor) !== ['database', 'mail']
+                ) {
+                    return false;
+                }
+
+                $mail = $notification->toMail($supervisor);
+                $html = (string) $mail->render();
+                $text = view('emails.memo_text', $mail->viewData)->render();
+
+                return str_contains($html, 'Yogi Pratama')
+                    && str_contains($html, 'Diajukan')
+                    && str_contains($text, 'Yogi Pratama')
+                    && str_contains($text, 'Diajukan');
+            },
+        );
         Notification::assertNotSentTo($extraSupervisor, MemoNotification::class);
         Notification::assertNotSentTo($inactiveSupervisor, MemoNotification::class);
         Notification::assertNotSentTo($staff, MemoNotification::class, fn (MemoNotification $notification) => $notification->title === 'Memo menunggu persetujuan Anda');
@@ -251,7 +272,7 @@ class ApprovalEmailNotificationTest extends TestCase
             'approver_ids' => $approverIds ?? [
                 $supervisor->id,
                 User::where('username', 'devi')->value('id'),
-                User::where('username', 'awanti')->value('id'),
+                User::where('username', 'aswani')->value('id'),
                 User::where('username', 'richie')->value('id'),
             ],
         ]);

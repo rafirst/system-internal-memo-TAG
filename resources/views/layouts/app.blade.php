@@ -94,17 +94,21 @@
         .app-main { min-width: 0; padding: 16px 20px 24px; }
         .content-shell { width: min(100%, 1440px); margin: 0 auto; }
         .brand-logo { display: block; width: 94px; height: 36px; object-fit: contain; }
+        .mobile-menu-toggle { display: none; }
         @media (max-width: 760px) {
             .workspace { grid-template-columns: 1fr; min-height: calc(100vh - 104px); }
             .workspace.is-sidebar-collapsed { grid-template-columns: 1fr; }
-            .sidebar { display: block; overflow-x: auto; border-right: 0; border-bottom: 1px solid #e4eaf2; }
-            .sidebar nav { display: flex; min-width: max-content; padding: 8px 10px; }
-            .sidebar-group { display: flex; margin: 0; }
+            .sidebar { display: none; border-right: 0; border-bottom: 1px solid #e4eaf2; }
+            .workspace.is-mobile-menu-open .sidebar { display: flex; }
+            .sidebar-brand { display: none; }
+            .sidebar nav { display: block; padding: 8px 10px; }
+            .sidebar-group { display: block; margin: 0; }
             .sidebar-group-heading { display: none; }
-            .sidebar-link { border-radius: 8px; padding: 0 12px; }
-            .is-sidebar-collapsed .sidebar-link { padding: 0 12px; }
-            .is-sidebar-collapsed .sidebar-link-label { display: inline; }
-            .is-sidebar-collapsed .sidebar-brand-label { display: block; }
+            .sidebar-link { min-height: 44px; border-radius: 8px; padding: 0 12px; }
+            .is-sidebar-collapsed .sidebar-link { justify-content: flex-start; padding: 0 12px; }
+            .is-sidebar-collapsed .sidebar-link-label,
+            .is-sidebar-collapsed .sidebar-unread-dot { display: inline; }
+            .mobile-menu-toggle { display: inline-flex; }
             .app-main { padding: 14px 12px 22px; }
         }
         @media (max-width: 520px) {
@@ -122,9 +126,24 @@
     $unreadNotifications = $authUser->unreadNotifications()->count();
 @endphp
 
-<div class="flex min-h-screen flex-col">
+<div class="flex min-h-screen flex-col"
+     x-data="{ sidebarCollapsed: localStorage.getItem('internal-memo-sidebar-collapsed') === 'true', mobileMenuOpen: false }"
+     @keydown.escape.window="mobileMenuOpen = false">
     <header class="brand-stripes relative z-10 flex h-14 shrink-0 items-center justify-between px-4 text-white shadow-md sm:px-7">
-        <div class="flex min-w-0 items-center gap-4">
+        <div class="flex min-w-0 items-center gap-3 sm:gap-4">
+            <button type="button"
+                    class="mobile-menu-toggle h-10 w-10 shrink-0 items-center justify-center rounded-lg text-white transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/70"
+                    :aria-label="mobileMenuOpen ? 'Tutup navigasi' : 'Buka navigasi'"
+                    aria-controls="primary-navigation"
+                    :aria-expanded="mobileMenuOpen.toString()"
+                    @click="mobileMenuOpen = !mobileMenuOpen">
+                <svg x-show="!mobileMenuOpen" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+                <svg x-show="mobileMenuOpen" x-cloak class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m6 6 12 12M18 6 6 18"/>
+                </svg>
+            </button>
             <a href="{{ route('dashboard') }}" aria-label="Dashboard Internal Memo">
                 <img class="brand-logo" src="{{ asset('assets/images/Logo-TAG-white.png') }}" alt="Tunas Auto Graha">
             </a>
@@ -182,8 +201,7 @@
     </header>
 
     <div class="workspace flex-1"
-         x-data="{ sidebarCollapsed: localStorage.getItem('internal-memo-sidebar-collapsed') === 'true' }"
-         :class="{ 'is-sidebar-collapsed': sidebarCollapsed }">
+         :class="{ 'is-sidebar-collapsed': sidebarCollapsed, 'is-mobile-menu-open': mobileMenuOpen }">
         <aside class="sidebar">
             <button type="button"
                     class="sidebar-brand w-full"
@@ -195,14 +213,14 @@
                     <span class="sidebar-brand-title">TAG Internal Memo</span>
                 </span>
             </button>
-            <nav aria-label="Navigasi utama">
+            <nav id="primary-navigation" aria-label="Navigasi utama">
                 <div class="sidebar-group">
                     <span class="sidebar-group-heading">UTAMA</span>
-                    <a href="{{ route('dashboard') }}" class="sidebar-link {{ request()->routeIs('dashboard') ? 'is-active' : '' }}" title="Dashboard">
+                    <a href="{{ route('dashboard') }}" @click="mobileMenuOpen = false" class="sidebar-link {{ request()->routeIs('dashboard') ? 'is-active' : '' }}" title="Dashboard">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V10Z"/></svg>
                         <span class="sidebar-link-label">Dashboard</span>
                     </a>
-                    <a href="{{ route('memos.index') }}" class="sidebar-link {{ request()->routeIs('memos.index', 'memos.show') ? 'is-active' : '' }}" title="Semua Memo">
+                    <a href="{{ route('memos.index') }}" @click="mobileMenuOpen = false" class="sidebar-link {{ request()->routeIs('memos.index', 'memos.show') ? 'is-active' : '' }}" title="Semua Memo">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7 3h7l5 5v12a1 1 0 0 1-1 1H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 3v5h5M9 13h6M9 17h6"/></svg>
                         <span class="sidebar-link-label">Semua Memo</span>
                     </a>
@@ -210,12 +228,12 @@
                 <div class="sidebar-group">
                     <span class="sidebar-group-heading">PERSETUJUAN</span>
                     @can('create', App\Models\Memo::class)
-                        <a href="{{ route('memos.create') }}" class="sidebar-link {{ request()->routeIs('memos.create') ? 'is-active' : '' }}" title="Pengajuan">
+                        <a href="{{ route('memos.create') }}" @click="mobileMenuOpen = false" class="sidebar-link {{ request()->routeIs('memos.create') ? 'is-active' : '' }}" title="Pengajuan">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v8m-4-4h8"/></svg>
                             <span class="sidebar-link-label">Pengajuan</span>
                         </a>
                     @endcan
-                    <a href="{{ route('notifications.index') }}" class="sidebar-link {{ request()->routeIs('notifications.*') ? 'is-active' : '' }}" title="Notifikasi">
+                    <a href="{{ route('notifications.index') }}" @click="mobileMenuOpen = false" class="sidebar-link {{ request()->routeIs('notifications.*') ? 'is-active' : '' }}" title="Notifikasi">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
                         <span class="sidebar-link-label">Notifikasi</span>
                         @if($unreadNotifications > 0)
@@ -226,7 +244,7 @@
                 @if($authUser->hasRole('administrator'))
                     <div class="sidebar-group">
                         <span class="sidebar-group-heading">ADMINISTRASI</span>
-                        <a href="{{ route('admin.users.index') }}" class="sidebar-link {{ request()->routeIs('admin.users.*') ? 'is-active' : '' }}" title="Pengguna">
+                        <a href="{{ route('admin.users.index') }}" @click="mobileMenuOpen = false" class="sidebar-link {{ request()->routeIs('admin.users.*') ? 'is-active' : '' }}" title="Pengguna">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2m6-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm10 10v-2a4 4 0 0 0-3-3.87m-1-11.13a4 4 0 0 1 0 7.75"/></svg>
                             <span class="sidebar-link-label">Pengguna</span>
                         </a>

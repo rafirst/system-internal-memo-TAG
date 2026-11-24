@@ -61,6 +61,12 @@ class PameranMemoTest extends TestCase
             ->assertSeeText('Rp 350.000,-')
             ->assertSeeText('Rp 500.000,-');
 
+        $this->get(route('memos.preview', $memo))
+            ->assertOk()
+            ->assertSeeText('INTERNAL MEMO')
+            ->assertSee('class="preview-toolbar"', false)
+            ->assertSee('@media screen and (max-width: 600px)', false);
+
         $this->get(route('memos.pdf', $memo))
             ->assertOk()
             ->assertHeader('content-type', 'application/pdf');

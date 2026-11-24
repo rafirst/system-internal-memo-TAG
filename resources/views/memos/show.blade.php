@@ -120,7 +120,7 @@
                         </dt>
                         <dd class="font-semibold text-slate-700">{{ $memo->submitter?->name ?? '—' }}</dd>
 
-                        <dt class="flex items-center gap-1.5 text-slate-500">
+                        {{-- <dt class="flex items-center gap-1.5 text-slate-500">
                             <svg class="h-3 w-3 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M5 20a7 7 0 0 1 14 0"/></svg>
                             Atas nama
                         </dt>
@@ -129,7 +129,7 @@
                             @if($memo->onBehalfOf?->jabatan)
                                 <span class="text-slate-500">({{ $memo->onBehalfOf->jabatan }})</span>
                             @endif
-                        </dd>
+                        </dd> --}}
 
                         <dt class="flex items-center gap-1.5 text-slate-500">
                             <svg class="h-3 w-3 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-5h6v5M8 10h.01M16 10h.01"/></svg>
@@ -390,8 +390,8 @@
                     </a>
 
                     @can('delete', $memo)
-                        <form method="POST" action="{{ route('memos.destroy', $memo) }}" onsubmit="return confirm('Hapus draft ini?')">@csrf @method('DELETE')
-                            <button class="w-full rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50">Hapus Draft</button>
+                        <form method="POST" action="{{ route('memos.destroy', $memo) }}" onsubmit="return confirm('Hapus memo ini secara permanen?')">@csrf @method('DELETE')
+                            <button class="w-full rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50">Hapus Memo</button>
                         </form>
                     @endcan
                 </div>

@@ -22,7 +22,7 @@ class MemoPolicy
     public function create(User $user): bool
     {
         return $user->hasRole('administrator')
-            || ($user->hasRole('staff') && $user->division_id && $user->branch_id);
+            || (($user->hasRole('staff') || $user->hasRole('spv')) && $user->division_id && $user->branch_id);
     }
 
     public function update(User $user, Memo $memo): bool
@@ -40,7 +40,18 @@ class MemoPolicy
 
     public function delete(User $user, Memo $memo): bool
     {
-        return $memo->submitter_id === $user->id && $memo->status === MemoStatus::Draft;
+        if ($memo->submitter_id !== $user->id) {
+            return false;
+        }
+
+        if ($memo->status === MemoStatus::Draft) {
+            return true;
+        }
+
+        return $memo->status === MemoStatus::Pending
+            && ! $memo->approvals()
+                ->whereIn('status', [ApprovalStatus::Approved->value, ApprovalStatus::Denied->value])
+                ->exists();
     }
 
     public function submit(User $user, Memo $memo): bool

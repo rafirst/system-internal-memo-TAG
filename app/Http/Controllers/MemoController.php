@@ -60,15 +60,15 @@ class MemoController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        Gate::authorize('create', Memo::class);
+        $user = $request->user();
 
         return view('memos.form', [
             'memo' => null,
-            'divisions' => auth()->user()->hasRole('administrator') ? Division::orderBy('name')->get() : collect(),
-            'branches' => auth()->user()->hasRole('administrator') ? Branch::orderBy('name')->get() : collect(),
-            'approvers' => $this->eligibleApprovers(auth()->id()),
+            'divisions' => $user->hasRole('administrator') ? Division::orderBy('name')->get() : collect(),
+            'branches' => $user->hasRole('administrator') ? Branch::orderBy('name')->get() : collect(),
+            'approvers' => $this->eligibleApprovers($user->id),
         ]);
     }
 
@@ -89,7 +89,7 @@ class MemoController extends Controller
                 ...$this->memoAttributes($request),
                 'approver_ids' => $request->validated('approver_ids', []),
                 'submitter_id' => $user->id,
-                'on_behalf_of_id' => $this->supervisorOf($divisionId)?->id,
+                'on_behalf_of_id' => $user->hasRole('spv') ? null : $this->supervisorOf($divisionId)?->id,
                 'division_id' => $divisionId,
                 'branch_id' => $branchId,
                 'status' => MemoStatus::Draft,
@@ -114,14 +114,17 @@ class MemoController extends Controller
         return view('memos.show', compact('memo'));
     }
 
-    public function edit(Memo $memo)
+    public function edit(Request $request, Memo $memo)
     {
         Gate::authorize('update', $memo);
+        $user = $request->user();
+        abort_unless($user instanceof User, 401);
+
         $memo->load(['items', 'attachments', 'approvals.approverRole', 'approvals.assignedApprover', 'approvals.actor']);
 
         return view('memos.form', [
             'memo' => $memo,
-            'approvers' => $this->eligibleApprovers(auth()->id()),
+            'approvers' => $this->eligibleApprovers($user->id),
         ]);
     }
 
@@ -154,11 +157,20 @@ class MemoController extends Controller
 
     public function destroy(Memo $memo)
     {
-        Gate::authorize('delete', $memo);
-        Storage::disk('local')->deleteDirectory("memos/{$memo->id}");
-        $memo->delete();
+        DB::transaction(function () use ($memo): void {
+            $memo = Memo::query()->lockForUpdate()->findOrFail($memo->id);
+            Gate::authorize('delete', $memo);
 
-        return redirect()->route('memos.index')->with('success', 'Draft memo dihapus.');
+            DB::table('notifications')
+                ->where('data->memo_id', $memo->id)
+                ->delete();
+
+            $memo->delete();
+        });
+
+        Storage::disk('local')->deleteDirectory("memos/{$memo->id}");
+
+        return redirect()->route('memos.index')->with('success', 'Memo berhasil dihapus.');
     }
 
     // ----------------------------------------------------------------------

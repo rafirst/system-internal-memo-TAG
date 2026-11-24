@@ -88,7 +88,22 @@ class Memo extends Model
     {
         return match ($user->role?->slug) {
             'administrator' => $query,
-            'spv' => $query->where('division_id', $user->division_id)->where('status', '!=', 'draft'),
+            'spv' => $query->where(fn ($visibleMemos) => $visibleMemos
+                ->where(fn ($nonDraftMemos) => $nonDraftMemos
+                    ->where('status', '!=', 'draft')
+                    ->where(fn ($divisionMemos) => $divisionMemos
+                        ->where('division_id', $user->division_id)
+                        ->orWhereHas('approvals', fn ($approvals) => $approvals->where(function ($approvalQuery) use ($user) {
+                            $approvalQuery->where('assigned_approver_id', $user->id)
+                                ->orWhere(fn ($legacyApprovals) => $legacyApprovals
+                                    ->whereNull('assigned_approver_id')
+                                    ->where('approver_role_id', $user->role_id)
+                                    ->whereHas('memo', fn ($memoQuery) => $memoQuery->where('on_behalf_of_id', $user->id)));
+                        })))
+                )
+                ->orWhere(fn ($ownDrafts) => $ownDrafts
+                    ->where('status', 'draft')
+                    ->where('submitter_id', $user->id))),
             default => $query->where(fn ($visibleMemos) => $visibleMemos
                 ->where('submitter_id', $user->id)
                 ->orWhere(fn ($approverMemos) => $approverMemos

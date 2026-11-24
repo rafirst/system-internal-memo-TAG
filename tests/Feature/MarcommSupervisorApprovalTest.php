@@ -57,6 +57,7 @@ class MarcommSupervisorApprovalTest extends TestCase
 
         $pendingMemo = $memo->fresh()->load([
             'approvals.actor',
+            'approvals.assignedApprover',
             'approvals.approverRole',
             'items',
             'division',
@@ -67,9 +68,12 @@ class MarcommSupervisorApprovalTest extends TestCase
         $pendingHtml = view('pdf.memo', [
             'memo' => $pendingMemo,
             'direksi' => null,
+            'qrCode' => null,
         ])->render();
         $this->assertStringContainsString('class="stamp waiting"', $pendingHtml);
         $this->assertStringContainsString('Menunggu approval', $pendingHtml);
+        $this->assertStringContainsString('Yogi Pratama', $pendingHtml);
+        $this->assertStringContainsString('Diajukan', $pendingHtml);
 
         $otherSupervisor = User::factory()->create([
             'name' => 'Supervisor Lain',
@@ -115,6 +119,7 @@ class MarcommSupervisorApprovalTest extends TestCase
         $html = view('pdf.memo', [
             'memo' => $memo,
             'direksi' => User::whereHas('role', fn ($query) => $query->where('slug', 'direksi'))->first(),
+            'qrCode' => null,
         ])->render();
 
         $this->assertStringContainsString('Disetujui', $html);

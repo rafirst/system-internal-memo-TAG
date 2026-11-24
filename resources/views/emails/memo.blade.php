@@ -4,8 +4,7 @@
     use App\Support\Terbilang;
 
     $approvals = $memo->currentApprovals->sortBy('step_order')->values();
-    $supervisorApproval = $approvals->first(fn ($approval) => $approval->approverRole?->slug === 'spv');
-    $approvalSignatures = $approvals->reject(fn ($approval) => $approval->approverRole?->slug === 'spv')->values();
+    $approvalSignatures = $approvals;
     $requester = $memo->onBehalfOf ?? $memo->submitter;
     $logoPath = public_path('assets/images/Logo-TAG.png');
     if (! is_file($logoPath)) {
@@ -33,8 +32,8 @@
         }
 
         return [
-            'name' => $roleLabel,
-            'title' => '',
+            'name' => $approval->assignedApprover?->name ?? $roleLabel,
+            'title' => $approval->assignedApprover?->jabatan ?: $roleLabel,
             'note' => $approval->status === ApprovalStatus::Denied
                 ? 'Ditolak'
                 : ($approval->status === ApprovalStatus::Pending ? 'Menunggu approval' : 'Menunggu giliran'),
@@ -44,16 +43,14 @@
         ];
     };
 
-    $requesterSignature = $supervisorApproval
-        ? $approvalCell($supervisorApproval)
-        : [
-            'name' => $requester->name,
-            'title' => $requester->jabatan,
-            'note' => $memo->submitted_at ? 'Diajukan' : 'Belum diajukan',
-            'date' => $memo->submitted_at?->format('d/m/Y'),
-            'color' => '#475569',
-            'background' => '#f8fafc',
-        ];
+    $requesterSignature = [
+        'name' => $requester->name,
+        'title' => $requester->jabatan,
+        'note' => $memo->submitted_at ? 'Diajukan' : 'Belum diajukan',
+        'date' => $memo->submitted_at?->format('d/m/Y'),
+        'color' => '#475569',
+        'background' => '#f8fafc',
+    ];
 @endphp
 <!doctype html>
 <html lang="id">

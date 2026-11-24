@@ -30,12 +30,32 @@ class MemoPdfController extends Controller
 
     private function streamPdf(Memo $memo): Response
     {
-        $memo->load(['items', 'division', 'branch', 'submitter', 'onBehalfOf', 'approvals.actor', 'approvals.approverRole']);
+        $name = 'Internal-Memo-'.str_replace('/', '-', $memo->memo_number ?? 'DRAFT-'.$memo->id).'.pdf';
+
+        return Pdf::loadView('pdf.memo', $this->memoViewData($memo))
+            ->setPaper('a4')
+            ->stream($name);
+    }
+
+    /**
+     * @return array{memo: Memo, direksi: ?User, qrCode: ?string}
+     */
+    private function memoViewData(Memo $memo): array
+    {
+        $memo->load([
+            'items',
+            'division',
+            'branch',
+            'submitter',
+            'onBehalfOf',
+            'approvals.actor',
+            'approvals.assignedApprover',
+            'approvals.approverRole',
+        ]);
 
         $direksi = User::whereHas('role', fn ($q) => $q->where('slug', 'direksi'))
             ->where('is_active', true)->first();
 
-        $name = 'Internal-Memo-'.str_replace('/', '-', $memo->memo_number ?? 'DRAFT-'.$memo->id).'.pdf';
         $qrCode = null;
 
         if ($memo->status !== MemoStatus::Draft) {
@@ -44,6 +64,6 @@ class MemoPdfController extends Controller
             $qrCode = 'data:image/png;base64,'.base64_encode((new Writer($renderer))->writeString($publicPdfUrl));
         }
 
-        return Pdf::loadView('pdf.memo', compact('memo', 'direksi', 'qrCode'))->setPaper('a4')->stream($name);
+        return compact('memo', 'direksi', 'qrCode');
     }
 }

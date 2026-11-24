@@ -5,20 +5,17 @@
     use App\Support\Terbilang;
 
     $approvals = $memo->approvals->where('round', $memo->round)->sortBy('step_order')->values();
-    $supervisorApproval = $approvals->first(fn ($approval) => $approval->approverRole?->slug === 'spv');
-    $approvalSignatures = $approvals->reject(fn ($approval) => $approval->approverRole?->slug === 'spv')->values();
+    $approvalSignatures = $approvals;
     $last = $approvalSignatures->last();
     $middle = $approvalSignatures->slice(0, max($approvalSignatures->count() - 1, 0));
     $requester = $memo->onBehalfOf ?? $memo->submitter;
     $isPameran = $memo->memo_kind === 'pameran';
     $pameran = $memo->pameran_details ?? [];
-    $requesterStamp = $supervisorApproval
-        ? null
-        : [
-            'note' => $memo->submitted_at ? 'Diajukan' : 'Belum diajukan',
-            'date' => $memo->submitted_at?->format('d/m/Y'),
-            'state' => $memo->submitted_at ? 'submitted' : 'waiting',
-        ];
+    $requesterStamp = [
+        'note' => $memo->submitted_at ? 'Diajukan' : 'Belum diajukan',
+        'date' => $memo->submitted_at?->format('d/m/Y'),
+        'state' => $memo->submitted_at ? 'submitted' : 'waiting',
+    ];
     $final = in_array($memo->status, [MemoStatus::Approved, MemoStatus::Disbursed, MemoStatus::Completed], true);
     $logo = public_path('assets/images/Logo-TAG.png');
 
@@ -46,8 +43,8 @@
         $denied = $a->status === ApprovalStatus::Denied;
 
         return [
-            'name' => $roleLabel,
-            'title' => '',
+            'name' => $a->assignedApprover?->name ?? $roleLabel,
+            'title' => $a->assignedApprover?->jabatan ?: $roleLabel,
             'note' => $denied ? 'Ditolak' : ($a->status === ApprovalStatus::Pending ? 'Menunggu approval' : 'Menunggu giliran'),
             'date' => $a->acted_at?->format('d/m/Y'),
             'state' => $denied ? 'denied' : 'waiting',
@@ -191,9 +188,6 @@
     <tr><td class="gap"></td>@foreach($middle as $a)<td></td>@endforeach @if($last)<td></td>@endif</tr>
     <tr>
         <td class="copy">
-            @if($supervisorApproval)
-                @php $requesterStamp = $cell($supervisorApproval); @endphp
-            @endif
             <span class="stamp {{ $requesterStamp['state'] }}">
                 {{ $requesterStamp['note'] }}
                 @if($requesterStamp['date'])<span class="stamp-date">{{ $requesterStamp['date'] }}</span>@endif

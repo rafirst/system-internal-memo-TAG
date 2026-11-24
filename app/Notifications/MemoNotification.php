@@ -51,6 +51,7 @@ class MemoNotification extends Notification
             'submitter.division',
             'onBehalfOf',
             'currentApprovals.approverRole',
+            'currentApprovals.assignedApprover',
             'currentApprovals.actor',
         ]);
         $direksi = User::whereHas('role', fn ($query) => $query->where('slug', 'direksi'))

@@ -4,8 +4,7 @@
     use App\Support\Terbilang;
 
     $approvals = $memo->currentApprovals->sortBy('step_order')->values();
-    $supervisorApproval = $approvals->first(fn ($approval) => $approval->approverRole?->slug === 'spv');
-    $approvalSignatures = $approvals->reject(fn ($approval) => $approval->approverRole?->slug === 'spv')->values();
+    $approvalSignatures = $approvals;
     $requester = $memo->onBehalfOf ?? $memo->submitter;
 
     $approvalLine = function ($approval) {
@@ -16,12 +15,12 @@
         };
         $name = $approval->status === ApprovalStatus::Approved
             ? ($approval->actor?->name ?? $roleLabel)
-            : $roleLabel;
+            : ($approval->assignedApprover?->name ?? $roleLabel);
         $title = $approval->status === ApprovalStatus::Approved
             ? (in_array($approval->approverRole->slug, ['admin_keuangan', 'admin_finance'], true)
                 ? $roleLabel
                 : ($approval->actor?->jabatan ?: $roleLabel))
-            : '';
+            : ($approval->assignedApprover?->jabatan ?: $roleLabel);
         $status = match ($approval->status) {
             ApprovalStatus::Approved => 'Disetujui',
             ApprovalStatus::Denied => 'Ditolak',
@@ -67,11 +66,7 @@ Demikianlah surat pengajuan ini kami sampaikan, atas perhatian dan persetujuanny
 {{ $memo->branch->city }}, {{ Format::tanggal($memo->memo_date) }}
 
 Hormat saya:
-@if($supervisorApproval)
-{{ $approvalLine($supervisorApproval) }}
-@else
 {{ $requester->name }}{{ $requester->jabatan ? ' — '.$requester->jabatan : '' }}: {{ $memo->submitted_at ? 'Diajukan' : 'Belum diajukan' }}{{ $memo->submitted_at ? ' ('.$memo->submitted_at->format('d/m/Y').')' : '' }}
-@endif
 @foreach($approvalSignatures as $approval)
 {{ $approvalLine($approval) }}
 @endforeach
