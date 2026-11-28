@@ -18,6 +18,7 @@ class UserManagementTest extends TestCase
         $this->seed();
 
         $administrator = User::where('username', 'admin')->firstOrFail();
+        $branch = Branch::where('name', 'Palembang')->firstOrFail();
         $this->actingAs($administrator);
 
         $this->get(route('admin.users.index'))
@@ -31,6 +32,7 @@ class UserManagementTest extends TestCase
             ->assertOk()
             ->assertSee('name="username"', false)
             ->assertSee('name="email"', false)
+            ->assertSee('name="office_type"', false)
             ->assertSee('id="jabatan" name="jabatan"', false)
             ->assertSee('<option value="HRD"', false)
             ->assertSee('<option value="Kepala Kontrak"', false);
@@ -41,6 +43,8 @@ class UserManagementTest extends TestCase
             'email' => 'pengguna.baru@example.test',
             'password' => 'password123',
             'role_id' => Role::where('slug', 'staff')->value('id'),
+            'office_type' => 'branch',
+            'branch_id' => $branch->id,
             'jabatan' => 'HRD',
             'is_active' => '1',
         ]);
@@ -50,6 +54,24 @@ class UserManagementTest extends TestCase
         $response->assertRedirect(route('admin.users.index'));
         $this->assertSame('pengguna.baru@example.test', $user->email);
         $this->assertSame('HRD', $user->jabatan);
+        $this->assertSame('branch', $user->office_type);
+        $this->assertSame($branch->id, $user->branch_id);
+
+        $this->put(route('admin.users.update', $user), [
+            'name' => $user->name,
+            'username' => $user->username,
+            'email' => $user->email,
+            'role_id' => $user->role_id,
+            'office_type' => 'head_office',
+            'jabatan' => $user->jabatan,
+            'is_active' => '1',
+        ])->assertRedirect(route('admin.users.index'));
+
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'office_type' => 'head_office',
+            'branch_id' => $branch->id,
+        ]);
 
         $this->post(route('admin.users.store'), [
             'name' => 'Jabatan Tidak Valid',

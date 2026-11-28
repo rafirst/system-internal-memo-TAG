@@ -9,6 +9,11 @@ class Role extends Model
 {
     protected $fillable = ['name', 'slug', 'label', 'level'];
 
+    public function getLabelAttribute(?string $value): string
+    {
+        return $value ?: $this->name;
+    }
+
     public function users(): HasMany
     {
         return $this->hasMany(User::class);

@@ -165,7 +165,7 @@
                                             {{ $memo->subject }}
                                         </a>
                                         <span class="mt-1 inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-semibold text-slate-600">{{ $memo->memo_kind === 'pameran' ? 'Pameran' : 'Pengajuan' }}</span>
-                                        <span class="mt-1 block truncate text-[10px] text-slate-400">{{ $memo->memo_number ?? 'Draft' }}</span>
+                                        <span class="mt-1 block truncate text-[10px] text-slate-400">{{ $memo->memo_number ?? 'OTOMATIS' }}</span>
                                     </td>
                                     <td class="px-3 py-3 text-slate-600">{{ $memo->division?->name ?? '—' }}</td>
                                     <td class="px-3 py-3 text-slate-600">{{ $memo->submitter?->name ?? '—' }}</td>

@@ -16,7 +16,7 @@
             @forelse($memos as $memo)
                 <tr class="transition hover:bg-slate-50">
                     <td class="px-4 py-3 text-slate-500">{{ $memos->firstItem() + $loop->index }}</td>
-                    <td class="whitespace-nowrap px-3 py-3 font-medium text-slate-600">{{ $memo->memo_number ?? 'Draft' }}</td>
+                    <td class="whitespace-nowrap px-3 py-3 font-medium text-slate-600">{{ $memo->memo_number ?? 'OTOMATIS' }}</td>
                     <td class="max-w-[260px] px-3 py-3">
                         <a href="{{ route('memos.show', $memo) }}" class="block truncate font-semibold text-slate-700 hover:text-rose-700" title="{{ $memo->subject }}">
                             {{ \Illuminate\Support\Str::limit($memo->subject, 60) }}

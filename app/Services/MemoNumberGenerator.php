@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Division;
+use App\Models\Memo;
 use App\Models\MemoSequence;
 use Illuminate\Support\Facades\DB;
 
@@ -47,5 +48,72 @@ class MemoNumberGenerator
                 $year
             );
         });
+    }
+
+    /**
+     * Reclaim a memo number when the deleted memo was the latest in its series.
+     * Call inside the same transaction that deletes the memo.
+     */
+    public function release(Memo $memo): void
+    {
+        if (! $memo->memo_number) {
+            return;
+        }
+
+        $memo->loadMissing('division');
+        $division = $memo->division;
+        if (! $division) {
+            return;
+        }
+
+        $parts = [];
+        $pattern = '/^(\d+)\/'.preg_quote($division->code, '/').'-TAG\/[IVX]+\/(\d{4})$/D';
+        if (! preg_match($pattern, $memo->memo_number, $parts)) {
+            return;
+        }
+
+        $deletedNumber = (int) $parts[1];
+        $year = (int) $parts[2];
+        $sequence = MemoSequence::query()
+            ->where('division_id', $division->id)
+            ->where('year', $year)
+            ->lockForUpdate()
+            ->first();
+
+        $numbers = Memo::query()
+            ->where('division_id', $division->id)
+            ->whereNotNull('memo_number')
+            ->pluck('memo_number')
+            ->map(fn (string $memoNumber): ?int => $this->numberFromMemoNumber($memoNumber, $division->code, $year))
+            ->filter(fn (?int $number): bool => $number !== null)
+            ->values();
+
+        if (($numbers->max() ?? 0) >= $deletedNumber) {
+            return;
+        }
+
+        $remainingNumber = $numbers->max() ?? 0;
+
+        if ($sequence) {
+            $sequence->update(['last_number' => $remainingNumber]);
+
+            return;
+        }
+
+        MemoSequence::create([
+            'division_id' => $division->id,
+            'year' => $year,
+            'last_number' => $remainingNumber,
+        ]);
+    }
+
+    private function numberFromMemoNumber(string $memoNumber, string $divisionCode, int $year): ?int
+    {
+        $pattern = '/^(\d+)\/'.preg_quote($divisionCode, '/').'-TAG\/[IVX]+\/'.preg_quote((string) $year, '/').'$/D';
+        if (! preg_match($pattern, $memoNumber, $parts)) {
+            return null;
+        }
+
+        return (int) $parts[1];
     }
 }

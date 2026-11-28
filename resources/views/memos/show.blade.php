@@ -103,7 +103,7 @@
                             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7 3h7l5 5v13H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 3v5h5M9 13h6M9 17h6"/></svg>
                         </span>
                         <div class="min-w-0">
-                            <p class="truncate text-[11px] font-bold text-slate-800">No. {{ $memo->memo_number ?? 'Belum bernomor (draft)' }}</p>
+                            <p class="truncate text-[11px] font-bold text-slate-800">No. {{ $memo->memo_number ?? 'OTOMATIS' }}</p>
                             <p class="truncate text-[10px] text-slate-500">{{ $memo->subject }}</p>
                         </div>
                     </div>
@@ -280,6 +280,12 @@
                                         </span>
                                     </div>
                                     <div class="ml-auto flex shrink-0 items-center gap-1.5">
+                                        @if(in_array(strtolower(pathinfo($attachment->original_name, PATHINFO_EXTENSION)), ['pdf', 'jpg', 'jpeg', 'png'], true))
+                                            <a href="{{ route('memos.attachments.preview', [$memo, $attachment]) }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-2.5 py-1.5 text-[9px] font-semibold text-slate-600 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700">
+                                                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>
+                                                Preview
+                                            </a>
+                                        @endif
                                         <a href="{{ route('memos.attachments.download', [$memo, $attachment]) }}" class="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-2.5 py-1.5 text-[9px] font-semibold text-slate-600 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700">
                                             <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0 4-4m-4 4-4-4M5 17v3h14v-3"/></svg>
                                             Unduh
@@ -322,7 +328,7 @@
                 @forelse($memo->approvals->groupBy('round')->sortKeysDesc() as $round => $rows)
                     <div class="mb-3 last:mb-0">
                         <p class="mb-2 text-[9px] font-semibold uppercase tracking-wide text-slate-400">
-                            Ronde {{ $round }}{{ $round == $memo->round ? ' (terkini)' : '' }}
+                            Pengajuan {{ $round }}{{ $round == $memo->round ? ' (terkini)' : '' }}
                         </p>
                         <ol class="space-y-2">
                             @foreach($rows as $approval)
@@ -369,12 +375,12 @@
                 @endforelse
             </section>
 
-            <section class="rounded-xl border border-slate-100 bg-white p-3 shadow-sm" aria-label="Aksi memo">
+            <section class="rounded-xl border border-slate-100 bg-white p-3 shadow-sm" aria-label="Preview Memo">
                 <h2 class="mb-2 flex items-center gap-2 text-xs font-bold text-slate-800">
                     <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-50 text-rose-700">
-                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>
                     </span>
-                    Aksi
+                    Preview Memo
                 </h2>
                 <div class="space-y-2">
                     @can('update', $memo)
@@ -385,6 +391,10 @@
                     @endcan
 
                     <a href="{{ route('memos.pdf', $memo) }}" target="_blank" rel="noopener" class="flex w-full items-center justify-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-[11px] font-semibold text-slate-700 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700">
+                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>
+                        Preview Memo
+                    </a>
+                    <a href="{{ route('memos.pdf.download', $memo) }}" class="flex w-full items-center justify-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-[11px] font-semibold text-slate-700 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700">
                         <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0 4-4m-4 4-4-4M5 17v3h14v-3"/></svg>
                         Unduh PDF
                     </a>

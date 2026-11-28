@@ -45,7 +45,24 @@
         .memo-composer-paper-items { width: 100%; border-collapse: collapse; margin: 8px 0 14px; font-size: 8px; }
         .memo-composer-paper-items th, .memo-composer-paper-items td { border: 1px solid #111827; padding: 4px; }
         .memo-composer-paper-items th { background: #eee; text-align: center; }
-        .memo-composer-paper-sign { margin-top: 22px; text-align: center; }
+        .memo-composer-paper-approvals { margin-top: 22px; border-top: 1px solid #d1d5db; padding-top: 8px; }
+        .memo-composer-paper-approval-group { margin-top: 9px; }
+        .memo-composer-paper-approval-heading {
+            border: 1px solid #111827;
+            border-radius: 0;
+            background: #eee;
+            padding: 4px 6px;
+            color: #111827;
+            font-size: 8px;
+            font-weight: 700;
+            text-align: center;
+        }
+        .memo-composer-paper-approval-grid { display: flex; flex-wrap: nowrap; gap: 4px; margin-top: 5px; text-align: center; }
+        .memo-composer-paper-approval-card { display: flex; min-width: 0; flex: 1 1 0; flex-direction: column; align-items: center; padding: 0 2px; text-align: center; }
+        .memo-composer-paper-approval-label { color: #111827; font-size: 9px; }
+        .memo-composer-paper-approval-space { height: 38px; flex: none; }
+        .memo-composer-paper-approval-name { overflow-wrap: anywhere; color: #111827; font-size: 8px; font-weight: 700; text-decoration: underline; }
+        .memo-composer-paper-approval-detail { overflow-wrap: anywhere; color: #111827; font-size: 7px; line-height: 1.3; }
         .memo-composer-guidance { padding: 16px; }
         .memo-composer-sample { position: relative; min-height: 116px; overflow: hidden; border: 1px solid #e4eaf2; border-radius: 8px; background: linear-gradient(145deg, #f8fafc, #fff); padding: 14px; box-shadow: 0 2px 8px rgba(15,23,42,.05); }
         .memo-composer-sample::before { position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: #b5122b; content: ''; }
@@ -109,6 +126,8 @@
         'name' => $approver->name,
         'role' => $approver->role?->label ?? $approver->role?->name ?? 'Lainnya',
         'jabatan' => $approver->jabatan ?? '',
+        'officeType' => $approver->office_type ?? '',
+        'branchName' => $approver->branch?->name ?? '',
     ])->values();
     $approverOptionsById = $approverOptions->keyBy('id');
     $initialApproverIds = array_map('strval', old('approver_ids', $memo?->approver_ids ?? []));
@@ -129,6 +148,7 @@
     $divisionName = $memo?->division?->name ?? $selectedDivision?->name ?? auth()->user()->division?->name ?? '';
     $branchCity = $memo?->branch?->city ?? $selectedBranch?->city ?? auth()->user()->branch?->city ?? '';
     $requester = $memo?->onBehalfOf ?? $memo?->submitter ?? auth()->user();
+    $requesterBranchName = $requester->office_type === 'branch' ? ($requester->branch?->name ?? '') : '';
 @endphp
 
 <div
@@ -148,6 +168,9 @@
         attachmentNames: [],
         divisionName: {{ \Illuminate\Support\Js::from($divisionName) }},
         branchCity: {{ \Illuminate\Support\Js::from($branchCity) }},
+        requesterOfficeType: {{ \Illuminate\Support\Js::from($requester->office_type ?? '') }},
+        requesterBranchName: {{ \Illuminate\Support\Js::from($requesterBranchName) }},
+        requesterJabatan: {{ \Illuminate\Support\Js::from($requester->jabatan ?? '') }},
         add() { this.items.push({ name: '', qty: '', unit_price: '' }) },
         remove(i) { if (this.items.length > 1) this.items.splice(i, 1) },
         addApprover() {
@@ -176,6 +199,15 @@
             this.approverRows[index].id = approver.id
             this.approverRows[index].query = approver.name
             this.approverRows[index].open = false
+        },
+        selectedApproversByOfficeType(officeType) {
+            return this.approverRows
+                .filter(row => row.id)
+                .map(row => this.approverOptions.find(approver => approver.id === row.id))
+                .filter(approver => approver && approver.officeType === officeType)
+        },
+        lastSelectedApproverId() {
+            return this.approverRows.filter(row => row.id).slice(-1)[0]?.id || ''
         },
         sub(it) { return (Number(it.qty) || 1) * (Number(it.unit_price) || 0) },
         get total() { return this.items.reduce((sum, item) => sum + this.sub(item), 0) },
@@ -683,13 +715,13 @@
                     <table class="memo-composer-paper-header">
                         <tr>
                             <td><img src="{{ asset('assets/images/Logo-TAG.png') }}" alt="PT Tunas Auto Graha" class="memo-composer-paper-logo"></td>
-                            <td class="text-right font-bold" x-text="'Divisi ' + (divisionName || '—')"></td>
+                            {{-- <td class="text-right font-bold" x-text="'Divisi ' + (divisionName || '—')"></td> --}}
                         </tr>
                     </table>
 
                     <div class="memo-composer-paper-title">
                         <div><strong>INTERNAL MEMO</strong></div>
-                        <div class="font-bold">No : {{ $memo?->memo_number ?? 'DRAFT' }}</div>
+                        <div class="font-bold">No : {{ $memo?->memo_number ?? 'OTOMATIS' }}</div>
                     </div>
 
                     <p>Kepada Yth,<br>Direksi PT. Tunas Auto Graha<br>Di. Tempat</p>
@@ -747,11 +779,79 @@
                     </div>
 
                     <p class="mt-3" x-text="(branchCity ? branchCity + ', ' : '') + dateLabel()"></p>
-                    <div class="memo-composer-paper-sign">
-                        <p>Hormat saya,</p>
-                        <div class="my-8"></div>
-                        <p class="font-bold underline">{{ $requester->name }}</p>
-                        <p>{{ $requester->jabatan }}</p>
+
+                    <div class="memo-composer-paper-approvals" x-cloak x-show="approverRows.some(row => row.id)" aria-label="Approver memo">
+                        <template x-if="selectedApproversByOfficeType('branch').length || requesterOfficeType === 'branch'">
+                            <section class="memo-composer-paper-approval-group">
+                                <p class="memo-composer-paper-approval-heading">Approver Cabang</p>
+                                <div class="memo-composer-paper-approval-grid">
+                                    <template x-if="requesterOfficeType === 'branch'">
+                                        <div class="memo-composer-paper-approval-card">
+                                            <span class="memo-composer-paper-approval-label">Hormat saya,</span>
+                                            <span class="memo-composer-paper-approval-space"></span>
+                                            <span class="memo-composer-paper-approval-name">{{ $requester->name }}</span>
+                                            <span x-text="[requesterJabatan, requesterBranchName].filter(Boolean).join(' · ')" class="memo-composer-paper-approval-detail"></span>
+                                        </div>
+                                    </template>
+                                    <template x-for="approver in selectedApproversByOfficeType('branch')" :key="approver.id">
+                                        <div class="memo-composer-paper-approval-card">
+                                            <span x-text="lastSelectedApproverId() === approver.id ? 'Menyetujui,' : 'Mengetahui,'" class="memo-composer-paper-approval-label"></span>
+                                            <span class="memo-composer-paper-approval-space"></span>
+                                            <span x-text="approver.name" class="memo-composer-paper-approval-name"></span>
+                                            <span x-text="approver.jabatan" class="memo-composer-paper-approval-detail"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </section>
+                        </template>
+
+                        <template x-if="selectedApproversByOfficeType('head_office').length || requesterOfficeType === 'head_office'">
+                            <section class="memo-composer-paper-approval-group">
+                                <p class="memo-composer-paper-approval-heading">Approver Head Office</p>
+                                <div class="memo-composer-paper-approval-grid">
+                                    <template x-if="requesterOfficeType === 'head_office'">
+                                        <div class="memo-composer-paper-approval-card">
+                                            <span class="memo-composer-paper-approval-label">Hormat saya,</span>
+                                            <span class="memo-composer-paper-approval-space"></span>
+                                            <span class="memo-composer-paper-approval-name">{{ $requester->name }}</span>
+                                            <span x-text="[requesterJabatan, requesterBranchName].filter(Boolean).join(' · ')" class="memo-composer-paper-approval-detail"></span>
+                                        </div>
+                                    </template>
+                                    <template x-for="approver in selectedApproversByOfficeType('head_office')" :key="approver.id">
+                                        <div class="memo-composer-paper-approval-card">
+                                            <span x-text="lastSelectedApproverId() === approver.id ? 'Menyetujui,' : 'Mengetahui,'" class="memo-composer-paper-approval-label"></span>
+                                            <span class="memo-composer-paper-approval-space"></span>
+                                            <span x-text="approver.name" class="memo-composer-paper-approval-name"></span>
+                                            <span x-text="approver.jabatan" class="memo-composer-paper-approval-detail"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </section>
+                        </template>
+
+                        <template x-if="selectedApproversByOfficeType('').length || !requesterOfficeType">
+                            <section class="memo-composer-paper-approval-group">
+                                <p class="memo-composer-paper-approval-heading">Lokasi belum ditentukan</p>
+                                <div class="memo-composer-paper-approval-grid">
+                                    <template x-if="!requesterOfficeType">
+                                        <div class="memo-composer-paper-approval-card">
+                                            <span class="memo-composer-paper-approval-label">Hormat saya,</span>
+                                            <span class="memo-composer-paper-approval-space"></span>
+                                            <span class="memo-composer-paper-approval-name">{{ $requester->name }}</span>
+                                            <span x-text="requesterJabatan" class="memo-composer-paper-approval-detail"></span>
+                                        </div>
+                                    </template>
+                                    <template x-for="approver in selectedApproversByOfficeType('')" :key="approver.id">
+                                        <div class="memo-composer-paper-approval-card">
+                                            <span x-text="lastSelectedApproverId() === approver.id ? 'Menyetujui,' : 'Mengetahui,'" class="memo-composer-paper-approval-label"></span>
+                                            <span class="memo-composer-paper-approval-space"></span>
+                                            <span x-text="approver.name" class="memo-composer-paper-approval-name"></span>
+                                            <span x-text="approver.jabatan" class="memo-composer-paper-approval-detail"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </section>
+                        </template>
                     </div>
                 </article>
             </div>

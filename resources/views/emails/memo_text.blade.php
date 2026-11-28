@@ -39,7 +39,7 @@ PT TUNAS AUTO GRAHA
 Divisi {{ $memo->division->name }}
 
 INTERNAL MEMO
-No : {{ $memo->memo_number ?? 'DRAFT' }}
+No : {{ $memo->memo_number ?? 'OTOMATIS' }}
 
 Kepada Yth,
 Direksi PT. Tunas Auto Graha

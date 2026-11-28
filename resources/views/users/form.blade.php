@@ -37,7 +37,18 @@
             padding: 0 10px 0 34px;
             color: #334155;
             font-size: 11px;
+            color-scheme: light;
+            -webkit-text-fill-color: #334155;
             transition: border-color 150ms ease, box-shadow 150ms ease;
+        }
+        .user-form-control option {
+            background: #fff;
+            color: #334155;
+            -webkit-text-fill-color: #334155;
+        }
+        .user-form-control option:checked {
+            background: #e2e8f0;
+            color: #334155;
         }
         .user-form-control::placeholder { color: #94a3b8; }
         .user-form-control:focus {
@@ -141,7 +152,8 @@
                         <div class="relative">
                             <svg class="user-form-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m12 3 8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4"/></svg>
                             <select id="role_id" name="role_id" required class="user-form-control">
-                                @foreach($roles as $r)<option value="{{ $r->id }}" @selected(old('role_id', $user?->role_id) == $r->id)>{{ $r->label }}</option>@endforeach
+                                <option value="">Pilih role</option>
+                                @foreach($roles as $r)<option value="{{ $r->id }}" @selected(old('role_id', $user?->role_id) == $r->id)>{{ $r->label ?: $r->name }}</option>@endforeach
                             </select>
                         </div>
                     </div>
@@ -158,6 +170,20 @@
                     </div>
 
                     <div>
+                        <label for="office_type" class="mb-1 block text-[10px] font-semibold text-slate-700">Lokasi User <span class="text-rose-600">*</span></label>
+                        <div class="relative">
+                            <svg class="user-form-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-5h6v5M8 10h.01M16 10h.01"/></svg>
+                            <select id="office_type" name="office_type" required class="user-form-control">
+                                <option value="">Pilih lokasi user</option>
+                                <option value="head_office" @selected(old('office_type', $user?->office_type) === 'head_office')>Head Office</option>
+                                <option value="branch" @selected(old('office_type', $user?->office_type) === 'branch')>Cabang</option>
+                            </select>
+                        </div>
+                        @error('office_type')<p class="mt-1 text-[10px] text-red-600">{{ $message }}</p>@enderror
+                        <p class="mt-1 text-[9px] text-slate-500">Digunakan untuk mengelompokkan approver pada alur persetujuan.</p>
+                    </div>
+
+                    <div>
                         <label for="branch_id" class="mb-1 block text-[10px] font-semibold text-slate-700">Cabang</label>
                         <div class="relative">
                             <svg class="user-form-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
@@ -166,6 +192,8 @@
                                 @foreach($branches as $b)<option value="{{ $b->id }}" @selected(old('branch_id', $user?->branch_id) == $b->id)>{{ $b->name }}</option>@endforeach
                             </select>
                         </div>
+                        @error('branch_id')<p class="mt-1 text-[10px] text-red-600">{{ $message }}</p>@enderror
+                        <p class="mt-1 text-[9px] text-slate-500">Wajib dipilih jika lokasi user adalah Cabang.</p>
                     </div>
                 </div>
 

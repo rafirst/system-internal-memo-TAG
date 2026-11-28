@@ -83,7 +83,7 @@
                     <tr>
                         <td align="center" style="padding:14px 30px 20px;">
                             <div style="font-size:16px;font-weight:bold;text-decoration:underline;">INTERNAL MEMO</div>
-                            <div style="margin-top:4px;font-size:14px;font-weight:bold;">No : {{ $memo->memo_number ?? 'DRAFT' }}</div>
+                            <div style="margin-top:4px;font-size:14px;font-weight:bold;">No : {{ $memo->memo_number ?? 'OTOMATIS' }}</div>
                         </td>
                     </tr>
                     <tr>

@@ -99,7 +99,7 @@
 
 <div class="title">
     <div class="t">INTERNAL MEMO</div>
-    <div class="n">No : {{ $memo->memo_number ?? 'DRAFT' }}</div>
+    <div class="n">No : {{ $memo->memo_number ?? 'OTOMATIS' }}</div>
 </div>
 
 <p>

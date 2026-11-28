@@ -140,7 +140,8 @@ class UserController extends Controller
             'password' => [$user ? 'nullable' : 'required', 'string', 'min:8'],
             'role_id' => ['required', 'exists:roles,id'],
             'division_id' => ['nullable', 'exists:divisions,id'],
-            'branch_id' => ['nullable', 'exists:branches,id'],
+            'office_type' => ['required', Rule::in(['head_office', 'branch'])],
+            'branch_id' => ['nullable', 'required_if:office_type,branch', 'exists:branches,id'],
             'jabatan' => ['nullable', 'string', Rule::in($this->positionOptions($user))],
         ]);
         $data['is_active'] = $request->boolean('is_active');

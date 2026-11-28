@@ -8,6 +8,7 @@ use App\Models\User;
 use BaconQrCode\Renderer\GDLibRenderer;
 use BaconQrCode\Writer;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Barryvdh\DomPDF\PDF as DomPdfDocument;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
@@ -18,7 +19,14 @@ class MemoPdfController extends Controller
     {
         Gate::authorize('view', $memo);
 
-        return $this->streamPdf($memo);
+        return $this->pdfDocument($memo)->stream($this->pdfName($memo));
+    }
+
+    public function download(Memo $memo): Response
+    {
+        Gate::authorize('view', $memo);
+
+        return $this->pdfDocument($memo)->download($this->pdfName($memo));
     }
 
     public function showPublic(Memo $memo): Response
@@ -30,11 +38,18 @@ class MemoPdfController extends Controller
 
     private function streamPdf(Memo $memo): Response
     {
-        $name = 'Internal-Memo-'.str_replace('/', '-', $memo->memo_number ?? 'DRAFT-'.$memo->id).'.pdf';
+        return $this->pdfDocument($memo)->stream($this->pdfName($memo));
+    }
 
+    private function pdfDocument(Memo $memo): DomPdfDocument
+    {
         return Pdf::loadView('pdf.memo', $this->memoViewData($memo))
-            ->setPaper('a4')
-            ->stream($name);
+            ->setPaper('a4');
+    }
+
+    private function pdfName(Memo $memo): string
+    {
+        return 'Internal-Memo-'.str_replace('/', '-', $memo->memo_number ?? 'DRAFT-'.$memo->id).'.pdf';
     }
 
     /**

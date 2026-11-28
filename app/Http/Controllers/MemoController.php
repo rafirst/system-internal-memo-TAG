@@ -9,6 +9,7 @@ use App\Models\Division;
 use App\Models\Memo;
 use App\Models\User;
 use App\Services\ApprovalService;
+use App\Services\MemoNumberGenerator;
 use DomainException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
@@ -18,7 +19,10 @@ use Illuminate\Support\Facades\Storage;
 
 class MemoController extends Controller
 {
-    public function __construct(private ApprovalService $service) {}
+    public function __construct(
+        private ApprovalService $service,
+        private MemoNumberGenerator $numbers,
+    ) {}
 
     public function index(Request $request)
     {
@@ -166,6 +170,7 @@ class MemoController extends Controller
                 ->delete();
 
             $memo->delete();
+            $this->numbers->release($memo);
         });
 
         Storage::disk('local')->deleteDirectory("memos/{$memo->id}");
@@ -265,7 +270,7 @@ class MemoController extends Controller
 
     private function eligibleApprovers(int $submitterId): Collection
     {
-        return User::with('role')
+        return User::with(['role', 'branch'])
             ->where('is_active', true)
             ->where('id', '!=', $submitterId)
             ->whereHas('role', fn ($query) => $query->where('slug', '!=', 'staff'))

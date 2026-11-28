@@ -31,6 +31,9 @@ Route::middleware('auth')->group(function () {
     Route::post('memos/{memo}/disburse', [MemoActionController::class, 'disburse'])->name('memos.disburse');
     Route::post('memos/{memo}/realization', [MemoActionController::class, 'realization'])->name('memos.realization');
     Route::get('memos/{memo}/pdf', MemoPdfController::class)->name('memos.pdf');
+    Route::get('memos/{memo}/pdf/download', [MemoPdfController::class, 'download'])->name('memos.pdf.download');
+    Route::get('memos/{memo}/attachments/{attachment}/preview', [AttachmentController::class, 'preview'])
+        ->scopeBindings()->name('memos.attachments.preview');
     Route::get('memos/{memo}/attachments/{attachment}', [AttachmentController::class, 'download'])
         ->scopeBindings()->name('memos.attachments.download');
 
